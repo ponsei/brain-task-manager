@@ -3,7 +3,7 @@ export interface Task {
   title: string
   completed: boolean
   userId: string
-  dueDate?: Date
+  dueDate?: Date | string
   priority?: 'high' | 'medium' | 'low'
   reward: number
   streak: number
