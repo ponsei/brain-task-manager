@@ -2,38 +2,38 @@ import { NextResponse } from 'next/server'
 import { prisma } from '../../lib/prisma'
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const userId = searchParams.get('userId')
-
-  if (!userId) {
-    return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
-  }
-
   try {
-    console.log('Fetching tasks for userId:', userId)
+    const { searchParams } = new URL(request.url)
+    const userId = searchParams.get('userId')
+
+    if (!userId) {
+      return new NextResponse(JSON.stringify({ error: 'User ID is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+
     const tasks = await prisma.task.findMany({
-      where: {
-        userId: userId
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
+      where: { userId },
+      orderBy: { createdAt: 'desc' }
     })
-    console.log('Found tasks:', tasks)
-    return NextResponse.json(tasks)
+
+    return new NextResponse(JSON.stringify(tasks), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    })
   } catch (error) {
-    console.error('Database error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch tasks', details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    )
+    return new NextResponse(JSON.stringify({ error: 'Failed to fetch tasks' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    })
   }
 }
 
 export async function POST(request: Request) {
-  const { title, userId, dueDate, priority } = await request.json()
-  
   try {
+    const { title, userId, dueDate, priority } = await request.json()
+    
     const task = await prisma.task.create({
       data: {
         title,
@@ -42,16 +42,23 @@ export async function POST(request: Request) {
         priority
       },
     })
-    return NextResponse.json(task)
+
+    return new NextResponse(JSON.stringify(task), {
+      status: 201,
+      headers: { 'Content-Type': 'application/json' }
+    })
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to create task' }, { status: 500 })
+    return new NextResponse(JSON.stringify({ error: 'Failed to create task' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    })
   }
 }
 
 export async function PUT(request: Request) {
-  const { id, completed, dueDate, priority } = await request.json()
-  
   try {
+    const { id, completed, dueDate, priority } = await request.json()
+    
     const task = await prisma.task.update({
       where: { id },
       data: { 
@@ -60,26 +67,43 @@ export async function PUT(request: Request) {
         priority
       },
     })
-    return NextResponse.json(task)
+
+    return new NextResponse(JSON.stringify(task), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    })
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to update task' }, { status: 500 })
+    return new NextResponse(JSON.stringify({ error: 'Failed to update task' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    })
   }
 }
 
 export async function DELETE(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const id = searchParams.get('id')
-  
-  if (!id) {
-    return NextResponse.json({ error: 'Task ID is required' }, { status: 400 })
-  }
-
   try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+    
+    if (!id) {
+      return new NextResponse(JSON.stringify({ error: 'Task ID is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+
     await prisma.task.delete({
       where: { id },
     })
-    return NextResponse.json({ success: true })
+
+    return new NextResponse(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    })
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to delete task' }, { status: 500 })
+    return new NextResponse(JSON.stringify({ error: 'Failed to delete task' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    })
   }
-} 
+}
