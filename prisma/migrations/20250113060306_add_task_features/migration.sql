@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "Task" ADD COLUMN     "dueDate" TIMESTAMP(3),
+ADD COLUMN     "priority" TEXT,
+ADD COLUMN     "reward" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "streak" INTEGER NOT NULL DEFAULT 0;
