@@ -6,14 +6,9 @@ export const authOptions: AuthOptions = {
     GithubProvider({
       clientId: process.env.GITHUB_ID || '',
       clientSecret: process.env.GITHUB_SECRET || '',
-      authorization: {
-        params: {
-          redirect_uri: 'api/auth/callback/github'
-        }
-      }
     }),
   ],
-  debug: true,
+  debug: process.env.NODE_ENV === 'development',
   callbacks: {
     async redirect({ url, baseUrl }) {
       return url.startsWith(baseUrl) ? url : baseUrl
