@@ -7,6 +7,7 @@ import TaskItem from './components/TaskItem'
 import TaskForm from './components/TaskForm'
 import RewardAnimation from './components/RewardAnimation'
 import LandingPage from './components/LandingPage'
+import { motion, AnimatePresence } from 'framer-motion'
 
 // エラー処理の型定義を追加
 type ErrorType = Error | null
@@ -69,14 +70,24 @@ export default function Page(): JSX.Element {
   // エラー表示
   if (error) {
     return (
-      <main className="p-4">
-        <p className="text-red-500">{error}</p>
-        <button
-          onClick={handleRetry}
-          className="bg-blue-500 text-white px-4 py-2 rounded mt-2"
-        >
-          再試行
-        </button>
+      <main className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white p-8">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-red-500/10 border border-red-500/30 rounded-xl p-6 backdrop-blur-sm"
+          >
+            <p className="text-red-400">{error}</p>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleRetry}
+              className="mt-4 px-6 py-2 bg-red-500 hover:bg-red-600 rounded-lg transition-colors duration-200"
+            >
+              再試行
+            </motion.button>
+          </motion.div>
+        </div>
       </main>
     )
   }
@@ -84,8 +95,12 @@ export default function Page(): JSX.Element {
   // ログイン状態の確認を修正
   if (status === 'loading') {
     return (
-      <main className="p-4">
-        <p>読み込み中...</p>
+      <main className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white p-8 flex items-center justify-center">
+        <div className="flex items-center space-x-2">
+          <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+          <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+          <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"></div>
+        </div>
       </main>
     )
   }
@@ -185,29 +200,51 @@ export default function Page(): JSX.Element {
   }
 
   return (
-    <main className="p-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl">タスク管理</h1>
-        <button
-          onClick={() => signOut()}
-          className="bg-red-500 text-white px-4 py-2 rounded"
+    <main className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white p-8">
+      <div className="max-w-4xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex justify-between items-center mb-8"
         >
-          ログアウト
-        </button>
+          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
+            タスク管理
+          </h1>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => signOut()}
+            className="px-6 py-2 bg-red-500 hover:bg-red-600 rounded-lg transition-colors duration-200"
+          >
+            ログアウト
+          </motion.button>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mb-8"
+        >
+          <TaskForm onSubmit={handleAddTask} />
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="space-y-4"
+        >
+          <AnimatePresence>
+            {tasks.map((task: Task) => (
+              <TaskItem
+                key={task.id}
+                task={task}
+                onToggle={handleToggle}
+                onDelete={handleDelete}
+              />
+            ))}
+          </AnimatePresence>
+        </motion.div>
       </div>
-
-      <TaskForm onSubmit={handleAddTask} />
-
-      <ul>
-        {tasks.map((task: Task) => (
-          <TaskItem
-            key={task.id}
-            task={task}
-            onToggle={handleToggle}
-            onDelete={handleDelete}
-          />
-        ))}
-      </ul>
       <RewardAnimation 
         show={showReward} 
         points={rewardPoints}
