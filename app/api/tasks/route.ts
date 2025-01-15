@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '../../lib/prisma'
+import type { TaskStatus } from '@/types/task'
 
 export async function GET(request: Request) {
   try {
@@ -32,14 +33,18 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { title, userId, dueDate, priority } = await request.json()
+    const { title, userId, dueDate, priority, status } = await request.json()
     
     const task = await prisma.task.create({
       data: {
         title,
         userId,
+        completed: false,
         dueDate: dueDate ? new Date(dueDate) : undefined,
-        priority
+        priority,
+        reward: 0,
+        streak: 0,
+        status: 'todo',
       },
     })
 
@@ -48,6 +53,7 @@ export async function POST(request: Request) {
       headers: { 'Content-Type': 'application/json' }
     })
   } catch (error) {
+    console.error('Create task error:', error)
     return new NextResponse(JSON.stringify({ error: 'Failed to create task' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
@@ -57,14 +63,22 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const { id, completed, dueDate, priority } = await request.json()
+    const { id, status, completed, dueDate, priority } = await request.json()
+    
+    if (status && !['todo', 'in_progress', 'completed'].includes(status)) {
+      return new NextResponse(JSON.stringify({ error: 'Invalid status value' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
     
     const task = await prisma.task.update({
       where: { id },
-      data: { 
+      data: {
         completed,
         dueDate: dueDate ? new Date(dueDate) : undefined,
-        priority
+        priority,
+        status,
       },
     })
 
@@ -73,6 +87,7 @@ export async function PUT(request: Request) {
       headers: { 'Content-Type': 'application/json' }
     })
   } catch (error) {
+    console.error('Update task error:', error)
     return new NextResponse(JSON.stringify({ error: 'Failed to update task' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }

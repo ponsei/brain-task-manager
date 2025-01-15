@@ -7,15 +7,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum TaskStatus {
+  todo
+  in_progress
+  completed
+}
+
 model Task {
-  id          String    @id @default(cuid())
-  title       String
-  completed   Boolean   @default(false)
-  userId      String
-  dueDate     DateTime? // 期限
-  priority    String?   // 優先度
-  reward      Int       @default(0)
-  streak      Int       @default(0)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id        String    @id @default(cuid())
+  title     String
+  completed Boolean   @default(false)
+  userId    String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  dueDate   DateTime?
+  priority  String?
+  reward    Int       @default(0)
+  streak    Int       @default(0)
+  status    TaskStatus @default(todo)
 }

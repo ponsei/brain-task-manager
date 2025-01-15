@@ -2,26 +2,21 @@
 
 import React, { useState, useEffect } from 'react'
 import { useSession, signIn, signOut } from 'next-auth/react'
-import { Task } from '@/types/task'
-import TaskItem from './components/TaskItem'
-import TaskForm from './components/TaskForm'
+import { Task, TaskStatus } from '@/types/task'
 import RewardAnimation from './components/RewardAnimation'
 import LandingPage from './components/LandingPage'
-import { motion, AnimatePresence } from 'framer-motion'
-
-// エラー処理の型定義を追加
-type ErrorType = Error | null
+import KanbanBoard from './components/KanbanBoard'
+import { motion } from 'framer-motion'
 
 export default function Page(): JSX.Element {
   const { data: session, status } = useSession()
   const [tasks, setTasks] = useState<Task[]>([])
-  const [inputTask, setInputTask] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showReward, setShowReward] = useState(false)
   const [rewardPoints, setRewardPoints] = useState(0)
 
-  // データ取得関数を修正
+  // データ取得関数
   const fetchTasks = async (userEmail: string) => {
     try {
       setIsLoading(true)
@@ -40,7 +35,6 @@ export default function Page(): JSX.Element {
       }
 
       const data = await response.json()
-      console.log('Fetched tasks:', data)
       setTasks(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Detailed error:', error)
@@ -50,7 +44,6 @@ export default function Page(): JSX.Element {
     }
   }
 
-  // セッション状態の監視
   useEffect(() => {
     if (status === 'authenticated' && session?.user?.email) {
       fetchTasks(session.user.email)
@@ -60,14 +53,12 @@ export default function Page(): JSX.Element {
     }
   }, [session?.user?.email, status])
 
-  // 再試行機能の追加
   const handleRetry = () => {
     if (session?.user?.email) {
       fetchTasks(session.user.email)
     }
   }
 
-  // エラー表示
   if (error) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white p-8">
@@ -92,7 +83,6 @@ export default function Page(): JSX.Element {
     )
   }
 
-  // ログイン状態の確認を修正
   if (status === 'loading') {
     return (
       <main className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white p-8 flex items-center justify-center">
@@ -109,14 +99,12 @@ export default function Page(): JSX.Element {
     return <LandingPage />
   }
 
-  // タスク更新時の保存は削除（データベースに保存されるため）
-
-  const handleAddTask = async (taskData: {
+  const handleTaskCreate = async (taskData: {
     title: string
     dueDate?: Date
     priority?: 'high' | 'medium' | 'low'
   }) => {
-    if (!session) return
+    if (!session?.user?.email) return
 
     try {
       const response = await fetch('/api/tasks', {
@@ -126,7 +114,8 @@ export default function Page(): JSX.Element {
         },
         body: JSON.stringify({
           ...taskData,
-          userId: session.user?.email || '',
+          userId: session.user.email,
+          status: 'todo' as TaskStatus,
         }),
       })
       if (!response.ok) {
@@ -140,55 +129,41 @@ export default function Page(): JSX.Element {
     }
   }
 
-  const handleToggle = async (id: string) => {
-    const taskToUpdate = tasks.find(task => task.id === id)
-    if (!taskToUpdate) return
-
+  const handleTaskUpdate = async (taskId: string, updates: Partial<Task>) => {
     try {
       const response = await fetch('/api/tasks', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          id,
-          completed: !taskToUpdate.completed,
-        }),
+        body: JSON.stringify({ id: taskId, ...updates }),
       })
+      
+      if (!response.ok) throw new Error('Failed to update task')
+      
       const updatedTask = await response.json()
+      const oldTask = tasks.find(t => t.id === taskId)
 
-      // タスク完了時の演出
-      if (!taskToUpdate.completed) {
+      if (updates.status === 'completed' && oldTask?.status !== 'completed') {
         setShowReward(true)
-        const points = calculatePoints(taskToUpdate)
-        setRewardPoints(points)
+        if (oldTask) {
+          const points = calculatePoints(oldTask)
+          setRewardPoints(points)
+        }
         setTimeout(() => setShowReward(false), 3000)
       }
 
-      setTasks(tasks.map(task =>
-        task.id === id ? updatedTask : task
-      ))
+      setTasks(prevTasks => 
+        prevTasks.map(task => 
+          task.id === taskId ? { ...task, ...updatedTask } : task
+        )
+      )
     } catch (error) {
       console.error('Error updating task:', error)
     }
   }
 
-  // ポイント計算関数
-  const calculatePoints = (task: Task) => {
-    let points = 100  // 基本ポイント
-    
-    // 期限内完了ボーナス
-    if (task.dueDate && new Date() <= new Date(task.dueDate)) {
-      points += 50
-    }
-    
-    // 優先度ボーナス
-    if (task.priority === 'high') points += 30
-    
-    return points
-  }
-
-  const handleDelete = async (id: string) => {
+  const handleTaskDelete = async (id: string) => {
     try {
       await fetch(`/api/tasks?id=${id}`, {
         method: 'DELETE',
@@ -199,9 +174,18 @@ export default function Page(): JSX.Element {
     }
   }
 
+  const calculatePoints = (task: Task) => {
+    let points = 100
+    if (task.dueDate && new Date() <= new Date(task.dueDate)) {
+      points += 50
+    }
+    if (task.priority === 'high') points += 30
+    return points
+  }
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white p-8">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -220,30 +204,12 @@ export default function Page(): JSX.Element {
           </motion.button>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="mb-8"
-        >
-          <TaskForm onSubmit={handleAddTask} />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="space-y-4"
-        >
-          <AnimatePresence>
-            {tasks.map((task: Task) => (
-              <TaskItem
-                key={task.id}
-                task={task}
-                onToggle={handleToggle}
-                onDelete={handleDelete}
-              />
-            ))}
-          </AnimatePresence>
-        </motion.div>
+        <KanbanBoard
+          tasks={tasks}
+          onTaskCreate={handleTaskCreate}
+          onTaskUpdate={handleTaskUpdate}
+          onTaskDelete={handleTaskDelete}
+        />
       </div>
       <RewardAnimation 
         show={showReward} 

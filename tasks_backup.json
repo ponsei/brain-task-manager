@@ -1,0 +1,49 @@
+{
+  "totalTasks": 3,
+  "tasksByStatus": {
+    "todo": 2,
+    "in_progress": 0,
+    "completed": 1
+  },
+  "tasks": [
+    {
+      "id": "cm5xz7ye8000ag27girfexs25",
+      "title": "あああああ",
+      "completed": false,
+      "userId": "seipon0520@gmail.com",
+      "dueDate": null,
+      "priority": null,
+      "reward": 0,
+      "streak": 0,
+      "status": "todo",
+      "createdAt": "2025-01-15T14:07:43.328Z",
+      "updatedAt": "2025-01-15T14:07:43.328Z"
+    },
+    {
+      "id": "cm5xz7vt50009g27gu636891m",
+      "title": "ああああ",
+      "completed": false,
+      "userId": "seipon0520@gmail.com",
+      "dueDate": null,
+      "priority": null,
+      "reward": 0,
+      "streak": 0,
+      "status": "todo",
+      "createdAt": "2025-01-15T14:07:39.977Z",
+      "updatedAt": "2025-01-15T14:07:39.977Z"
+    },
+    {
+      "id": "cm5xz6clo0008g27gj9z07p1l",
+      "title": "あ",
+      "completed": true,
+      "userId": "seipon0520@gmail.com",
+      "dueDate": null,
+      "priority": null,
+      "reward": 0,
+      "streak": 0,
+      "status": "completed",
+      "createdAt": "2025-01-15T14:06:28.429Z",
+      "updatedAt": "2025-01-15T14:06:29.807Z"
+    }
+  ]
+}
