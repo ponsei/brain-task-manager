@@ -2,6 +2,7 @@ import './globals.css'
 import { getServerSession } from 'next-auth'
 import SessionProvider from './components/SessionProvider'
 import { authOptions } from './api/auth/config'
+import { Analytics } from '@vercel/analytics/react'
 
 export default async function RootLayout({
   children,
@@ -15,8 +16,9 @@ export default async function RootLayout({
       <body>
         <SessionProvider session={session}>
           {children}
+          <Analytics />
         </SessionProvider>
       </body>
     </html>
   )
-} 
+}
